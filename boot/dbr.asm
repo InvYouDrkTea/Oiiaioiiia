@@ -1,9 +1,15 @@
 ; 分区大小512MB
 	org 08200h
 	
-	BaseOfStack equ 08200h
+	BaseOfStack equ 8200h
 	BaseOfLoader equ 1000h
 	OffsetOfLoader equ 200h
+	OffsetOfRootDirBuffer equ 8400h
+	
+	OffsetOfFunctionReadDisk equ 2
+	OffsetOfFunctionLBAToCHS equ 4
+	OffsetOfNumberOfHead equ 2
+	OffsetOfSectorPerTrack equ 4
 	
 ; BPB部分	
 	jmp short ENTRY
@@ -37,23 +43,35 @@ ExBPB_FilSys db "FAT32   " ; 文件系统类型
 
 ; 引导程序部分
 ENTRY:
-	mov ax, cs
-	mov ds, ax
-	mov es, ax
-	mov ss, ax
-	mov sp, BaseOfStack
+	mov word [DiskDataTable], bx ; 接受MBR传来的指针
+	mov word [FunctionAddressTable], ax
+	mov sp, BaseOfStack ; 更换栈指针
 	
-	mov ah, 0eh
-	mov al, "D"
-	mov bx, 0
-	int 10h
-
+CALCULATE_ROOT_DIR: ; 计算根目录 分区起始扇区+保留扇区数+FAT表占用扇区数*FAT表个数
+	xor eax, eax
+	xor bx, bx
+	mov ax, [FAT32_SecPerFAT]
+	mov bl, [BPB_NumOfFAT]
+	mul bx
+	mov bx, [BPB_ResSec]
+	add ax, bx
+	mov bx, [BPB_NumOfHidSec]
+	add ax, bx
+	
+	mov di, [FunctionAddressTable]
+	call [di + OffsetOfFunctionLBAToCHS]
+	mov bx, OffsetOfRootDirBuffer
+	mov al, 1
+	mov di, [FunctionAddressTable]
+	call [di + OffsetOfFunctionReadDisk]
+	
 FINAL:
 	hlt
 	jmp FINAL
 
 ; 众数据在此
 	DiskDataTable dw 0
+	FunctionAddressTable dw 0
 
 ; 引导区标记部分
 	times 510 - ($ - $$) db 0

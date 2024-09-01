@@ -43,6 +43,8 @@ CHECK_DISK_DATA:
 	mov al, cl ; 这里不写注释了反正各个寄存器的值能查到
 	shr cl, 6
 	xchg ch, cl
+	inc cx
+	inc dh
 	shl al, 2
 	shr al, 2
 	mov word [NumberOfTrack], cx
@@ -104,7 +106,7 @@ FINAL:
 	jmp FINAL ; 发生错误停在这里
 
 ; 众数据在此
-I_START_BOOTING: db "The quick brown fox jumps over a lazy dog. Oiiaioiiia start booting.", 0ah, 0dh
+I_START_BOOTING: db "The quick brown fox jumps over a lazy dog. Oiiaioiiia now is booting.", 0ah, 0dh
 E_NO_BOOTABLE_PART: db "No active partition.", 0ah, 0dh
 I_FIND_BOOTABLE_PART: db "Find active partition.", 0ah, 0dh
 E_READ_FAILED: db "Disk read failed.", 0ah, 0dh
