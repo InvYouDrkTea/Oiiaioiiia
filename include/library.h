@@ -1,0 +1,1 @@
+extern uint32 return_parameter(uint32 parameter);
